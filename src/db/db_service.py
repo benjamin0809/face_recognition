@@ -1,29 +1,36 @@
-from .db_instance import UniqueObject
+import redis
+
+from .db_instance import Configuration
+pool = redis.ConnectionPool(host='127.0.0.1', port=6379)
+r = redis.Redis(connection_pool=pool)
 
 
-class MSSQL(object):
-    conn, cur = UniqueObject.get_object()
+class RedisService(object):
 
-    def __init__(self):
-        pass
+    @staticmethod
+    def redis_set(key_name, bytes):
+        # 连数据库
+        # 录入人名-对应特征向量
+        r.set(key_name, bytes)
 
-    def __del__(self):
-        # print("\n  MSSQL object has been realsed!")
-        pass
+    @staticmethod
+    def redis_get(name):
+        # 连数据库
+        faces = r.get(name)
+        return faces
 
-    def exec_query(self, sql, args=()):
-        self.cur.execute(sql, args)
-        res_list = self.cur.fetchall()
-        # print(res_list)
-        return res_list
+    @staticmethod
+    def redis_get_all():
+        # 连数据库
+        names = r.keys()
+        faces = r.mget(names)
+        return faces
 
-    def exec_non_query(self, sql, args=()):
-        try:
-            self.cur.execute(sql, args)
-            self.conn.commit()
-        except:
-            self.conn.rollback()
-        # finally:
-        #     self.cur.close()
-        #     self.conn.close()
-    # print("\nInserting exception!")
+    @staticmethod
+    def redis_get_names():
+        names = r.keys()
+        return names
+
+    @staticmethod
+    def get_pool():
+        return Configuration.pool

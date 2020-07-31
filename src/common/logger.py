@@ -18,6 +18,8 @@ import os
 def write_log(message):
 
     logger = logging.getLogger()
+    if not os.path.isdir(os.path.abspath('.') + "/log"):
+        os.makedirs(os.path.abspath('.') + "/log")
     handler = logging.FileHandler(get_file_path())
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
