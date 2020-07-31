@@ -104,7 +104,9 @@ def upload():
         return jsonify({'code': 500, 'msg': '人脸数量有误'})
     face_encodings = face_recognition.face_encodings(image, face_locations)
     # 连数据库
-    RedisService.redis_set(name, face_encodings[0].tobytes())
+
+    bytes = face_encodings[0].tobytes()
+    RedisService.redis_set(name, bytes)
     return jsonify(format_object(ApiErrorType.SUCCESS, '录入成功'))
 
 
