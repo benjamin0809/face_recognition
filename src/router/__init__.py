@@ -3,6 +3,7 @@ import numpy as np
 from flask import Flask, request, jsonify
 from werkzeug.exceptions import HTTPException
 
+from config import Config
 from src.common.error import APIException
 from src.common.error_code import ParameterException, AuthFailed, ServerError
 from src.common.logger import write_log
@@ -140,7 +141,8 @@ def search():
     face_encodings = face_recognition.face_encodings(image, face_locations)
     faces = RedisService.redis_get_all()
     # 组成矩阵，计算相似度（欧式距离）
-    matches = face_recognition.compare_faces([np.frombuffer(x) for x in faces], face_encodings[0])
+    matches = face_recognition.compare_faces([np.frombuffer(x) for x in faces], face_encodings[0],
+                                             tolerance=Config.tolerance)
     return jsonify({'code': 0, 'names': [str(name, 'utf-8') for name, match in zip(RedisService.redis_get_names(), matches) if match]})
 
 
