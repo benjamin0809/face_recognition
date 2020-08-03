@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify
 from werkzeug.exceptions import HTTPException
 
 from config import Config
+from src.common.app_uitility import read_file_from_base64
 from src.common.error import APIException
 from src.common.error_code import ParameterException, AuthFailed, ServerError
 from src.common.logger import write_log
@@ -98,7 +99,12 @@ def upload():
     if 'file' not in request.files:
         return jsonify({'code': 500, 'msg': '没有文件'})
     file = request.files['file']
+    if not file.filename:
+        raise ParameterException(ApiErrorType.PARAMS, 'file.filename must be called')
+    filename = file.filename.split('.', 1)[0]
     name = request.form['name']
+    if len(name) > 0:
+        filename = name
     image = face_recognition.load_image_file(file)
     face_locations = face_recognition.face_locations(image)
     if len(face_locations) != 1:
@@ -106,8 +112,8 @@ def upload():
     face_encodings = face_recognition.face_encodings(image, face_locations)
     # 连数据库
 
-    bytes = face_encodings[0].tobytes()
-    RedisService.redis_set(name, bytes)
+    bytes_ = face_encodings[0].tobytes()
+    RedisService.redis_set(filename, bytes_)
     return jsonify(format_object(ApiErrorType.SUCCESS, '录入成功'))
 
 
@@ -134,6 +140,26 @@ def search():
     if 'file' not in request.files:
         return jsonify({'code': 500, 'msg': '没有文件'})
     file = request.files['file']
+    image_ = face_recognition.load_image_file(file)
+    face_locations = face_recognition.face_locations(image_)
+    if len(face_locations) != 1:
+        return jsonify({'code': 500, 'msg': '人脸数量有误'})
+    face_encodings = face_recognition.face_encodings(image_, face_locations)
+    faces = RedisService.redis_get_all()
+    # 组成矩阵，计算相似度（欧式距离）
+    matches = face_recognition.compare_faces([np.frombuffer(x) for x in faces], face_encodings[0],
+                                             tolerance=Config.tolerance)
+    return jsonify({'code': 0, 'names': [str(name, 'utf-8') for name, match in zip(RedisService.redis_get_names(), matches) if match]})
+
+
+# 人脸搜索
+@app.route('/%s/find' % recognition_prefix, methods=['POST'])
+def find():
+    data = request.get_json()
+    base64str = data.get("base64str")
+    if not base64str or len(base64str) == 0:
+        raise ParameterException(ApiErrorType.PARAMS, 'base64str must be called')
+    file = read_file_from_base64(base64str)
     image = face_recognition.load_image_file(file)
     face_locations = face_recognition.face_locations(image)
     if len(face_locations) != 1:
