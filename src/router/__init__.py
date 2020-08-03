@@ -148,7 +148,7 @@ def search():
 
 # 清空redis key
 @app.route('/%s/clear' % recognition_prefix, methods=['POST'])
-def search():
+def clear():
     data = request.get_json()
     staff_no = data.get("staff_no")
     if not staff_no or len(staff_no) == 0:
