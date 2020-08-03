@@ -146,5 +146,18 @@ def search():
     return jsonify({'code': 0, 'names': [str(name, 'utf-8') for name, match in zip(RedisService.redis_get_names(), matches) if match]})
 
 
+# 清空redis key
+@app.route('/%s/clear' % recognition_prefix, methods=['POST'])
+def search():
+    data = request.get_json()
+    staff_no = data.get("staff_no")
+    if not staff_no or len(staff_no) == 0:
+        raise ParameterException(ApiErrorType.PARAMS, 'staff_no must be called')
+
+    RedisService.redis_clear_key(staff_no)
+    return jsonify(format_object(ApiErrorType.SUCCESS, 'ok'))
+
+
+
 def get_define_app():
     return app
