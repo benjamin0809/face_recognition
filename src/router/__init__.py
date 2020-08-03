@@ -184,6 +184,16 @@ def clear():
     return jsonify(format_object(ApiErrorType.SUCCESS, 'ok'))
 
 
+#  keys
+@app.route('/%s/keys' % recognition_prefix, methods=['GET'])
+def keys():
+    list1 = RedisService.redis_keys_all()
+    results = list()
+    for letter in list1:  # 第一个实例
+        res = str(letter)
+        results.append(res)
+    return jsonify(format_object(ApiErrorType.SUCCESS, results))
+
 
 def get_define_app():
     return app

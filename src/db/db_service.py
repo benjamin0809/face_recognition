@@ -37,6 +37,11 @@ class RedisService(object):
         return 1
 
     @staticmethod
+    def redis_keys_all():
+        names = r.keys()
+        return names
+
+    @staticmethod
     def redis_clear_all():
         names = r.keys()
         r.delete()
